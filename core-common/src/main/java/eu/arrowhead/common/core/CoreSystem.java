@@ -112,8 +112,10 @@ public enum CoreSystem {
 												   CoreSystemService.TRANSLATOR_FIWARE_SERVICE,
 												   CoreSystemService.TRANSLATOR_PLUGIN_SERVICE)),
 	
-	PLANTDESCRIPTIONENGINE(Defaults.DEFAULT_PLANT_DESCRIPTION_ENGINE_PORT, List.of()); //TODO add PDE services
+	PLANTDESCRIPTIONENGINE(Defaults.DEFAULT_PLANT_DESCRIPTION_ENGINE_PORT, List.of()), //TODO add PDE services
 	
+	POAONBOARDING(Defaults.DEFAULT_POA_ONBOARDING_PORT, List.of());  //TODO add PoA onboarding services
+
 	//=================================================================================================
 	// members
 	

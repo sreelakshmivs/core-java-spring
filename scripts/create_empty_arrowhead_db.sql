@@ -91,3 +91,8 @@ source translator_privileges.sql
 CREATE USER IF NOT EXISTS 'plant_description_engine'@'localhost' IDENTIFIED BY 'ivJ2y9qWCpTmzr0';
 CREATE USER IF NOT EXISTS 'plant_description_engine'@'%' IDENTIFIED BY 'ivJ2y9qWCpTmzr0';
 source plant_description_engine_privileges.sql
+
+-- PoA Onboarding controller
+CREATE USER IF NOT EXISTS 'poaonboarding'@'localhost' IDENTIFIED BY 'l2o4U3nWCtnSOIc';
+CREATE USER IF NOT EXISTS 'poaonboarding'@'%' IDENTIFIED BY 'l2o4U3nWCtnSOIc';
+source poa_onboarding_privileges.sql
