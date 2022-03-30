@@ -13,7 +13,6 @@ package eu.arrowhead.core.poaonboarding;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import org.apache.commons.codec.binary.Base64;
 import javax.servlet.http.HttpServletRequest;
@@ -21,6 +20,8 @@ import org.apache.http.HttpStatus;
 import org.jose4j.lang.JoseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import eu.arrowhead.common.CommonConstants;
@@ -41,12 +42,14 @@ public class PoaOnboardingController {
 
 	//=================================================================================================
 	// members
-	
+
 	private final Logger logger = LogManager.getLogger(PoaOnboardingController.class);
 
 	private static final String GET_ONBOARDING_POA_HTTP_200_MESSAGE = "PoA for device onboarding returned";
+	private static final String ONBOARD_HTTP_200_MESSAGE = "Device onboarding successful"; // TODO: Change this formulation
 
 	private static final String POA_URI = "/poa";
+	private static final String ONBOARD_URI = "/onboard";
 
 	@Autowired
 	private PoaGeneration poaGeneration;
@@ -75,19 +78,30 @@ public class PoaOnboardingController {
 	})
 	@GetMapping(path = POA_URI)
 	public String onboardingPoa(final HttpServletRequest request) {
-
 		final X509Certificate requesterCert = getCertificate(request);
 
-		String poa;
 		try {
-			poa = poaGeneration.generatePoa(requesterCert);
+			final String poa = poaGeneration.generatePoa(requesterCert);
+			prettyPrintToken(poa);
+			return poa;
 		} catch (final JoseException ex) {
 			logger.error("Failed to generate PoA", ex);
-			throw new ArrowheadException("Failed to generate PoA"); 
+			throw new ArrowheadException("Failed to generate PoA");
 		}
-		prettyPrintToken(poa);
-		return poa;
 	}
+
+		//-------------------------------------------------------------------------------------------------
+		@ApiOperation(value = "Onboards the device", response = String.class, tags = { CoreCommonConstants.SWAGGER_TAG_CLIENT })
+		@ApiResponses(value = {
+				@ApiResponse(code = HttpStatus.SC_OK, message = ONBOARD_HTTP_200_MESSAGE),
+				@ApiResponse(code = HttpStatus.SC_UNAUTHORIZED, message = CoreCommonConstants.SWAGGER_HTTP_401_MESSAGE),
+				@ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = CoreCommonConstants.SWAGGER_HTTP_500_MESSAGE)
+		})
+		@PostMapping(path = ONBOARD_URI)
+		public String onboard(final HttpServletRequest request, @RequestBody Object body) { // TODO: Change type of body
+			// TODO: Implement
+			return "OK";
+		}
 
 	// -------------------------------------------------------------------------------------------------
 	private void prettyPrintToken(String jwtToken) { // TODO: Remove this method.
