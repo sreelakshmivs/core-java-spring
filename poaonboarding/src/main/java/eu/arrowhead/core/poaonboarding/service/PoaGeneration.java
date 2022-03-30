@@ -35,7 +35,7 @@ import eu.arrowhead.common.exception.InvalidParameterException;
 
 @Service
 public class PoaGeneration {
-	
+
 	//=================================================================================================
 	// members
 
@@ -47,11 +47,12 @@ public class PoaGeneration {
 	private static final String PRINCIPAL_PUBLIC_KEY = "Principal public key";
 	private static final String AGENT_PUBLIC_KEY = "Agent public key";
 	private static final String METADATA = "metadata";
+	private static final String DESTINATION_NETWORK_ID = "destinationNetworkId";
 	private static final int TTL_MINUTES = 10;
 
 	@Value(CoreCommonConstants.$CORE_SYSTEM_NAME)
 	private String systemName;
-	
+
 	@Resource(name = CommonConstants.ARROWHEAD_CONTEXT)
 	private Map<String,Object> arrowheadContext;
 
@@ -60,7 +61,7 @@ public class PoaGeneration {
 
 	//-------------------------------------------------------------------------------------------------
 	public String generatePoa(final X509Certificate agentCert) throws JoseException {
-		final JsonWebSignature jws = new JsonWebSignature(); 
+		final JsonWebSignature jws = new JsonWebSignature();
 		final PublicKey principalPublicKey = (PublicKey) arrowheadContext.get(CommonConstants.SERVER_PUBLIC_KEY);
 		final PrivateKey privateKey = (PrivateKey) arrowheadContext.get(CommonConstants.SERVER_PRIVATE_KEY);
 
@@ -71,7 +72,7 @@ public class PoaGeneration {
 		jws.setContentTypeHeaderValue(POA_CONTENT_TYPE);
 		jws.setPayload(claims.toJson());
 		jws.setKey(privateKey);
-		
+
 		return jws.getCompactSerialization();
 	}
 
@@ -90,9 +91,10 @@ public class PoaGeneration {
 		claims.setExpirationTimeMinutesInTheFuture(TTL_MINUTES);
 		claims.setStringClaim(PRINCIPAL_PUBLIC_KEY, principalPublicKey.toString());
 		claims.setStringClaim(AGENT_PUBLIC_KEY, agentPublicKey.toString());
+		claims.setClaim(DESTINATION_NETWORK_ID, "<SSID>"); // TODO: Use value from application.properties
 		claims.setClaim(TRANSFERABLE, 0);
 		claims.setClaim(METADATA, generateMetadata(agentName));
-		
+
 		return claims;
 	}
 
