@@ -28,7 +28,7 @@ import eu.arrowhead.common.CommonConstants;
 import eu.arrowhead.common.CoreCommonConstants;
 import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.exception.InvalidParameterException;
-import eu.arrowhead.core.poaonboarding.service.PoaGeneration;
+import eu.arrowhead.core.poaonboarding.service.PoaGenerator;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -52,7 +52,7 @@ public class PoaOnboardingController {
 	private static final String ONBOARD_URI = "/onboard";
 
 	@Autowired
-	private PoaGeneration poaGeneration;
+	private PoaGenerator poaGenerator;
 
 	//=================================================================================================
 	// methods
@@ -81,7 +81,7 @@ public class PoaOnboardingController {
 		final X509Certificate requesterCert = getCertificate(request);
 
 		try {
-			final String poa = poaGeneration.generatePoa(requesterCert);
+			final String poa = poaGenerator.generatePoa(requesterCert);
 			prettyPrintToken(poa);
 			return poa;
 		} catch (final JoseException ex) {

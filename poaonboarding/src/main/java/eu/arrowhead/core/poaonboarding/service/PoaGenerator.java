@@ -15,6 +15,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
+import java.util.Base64;
 import java.util.Map;
 import javax.annotation.Resource;
 import org.apache.logging.log4j.LogManager;
@@ -34,20 +35,25 @@ import eu.arrowhead.common.CoreCommonConstants;
 import eu.arrowhead.common.exception.InvalidParameterException;
 
 @Service
-public class PoaGeneration {
+public class PoaGenerator {
 
 	//=================================================================================================
 	// members
 
-	private static final Logger logger = LogManager.getLogger(PoaGeneration.class);
+	private static final Logger logger = LogManager.getLogger(PoaGenerator.class);
 
 	private static final String POA_CONTENT_TYPE = "JWT";
 	private static final String POA_ALG = "RS256";
-	private static final String TRANSFERABLE = "Transferable";
-	private static final String PRINCIPAL_PUBLIC_KEY = "Principal public key";
-	private static final String AGENT_PUBLIC_KEY = "Agent public key";
+	private static final String TRANSFERABLE = "transferable";
+	private static final String PRINCIPAL_PUBLIC_KEY = "principalPublicKey";
+	private static final String AGENT_PUBLIC_KEY = "agentPublicKey";
 	private static final String METADATA = "metadata";
 	private static final String DESTINATION_NETWORK_ID = "destinationNetworkId";
+	private static final String PRINCIPAL_NAME = "principalName";
+	private static final String AGENT_NAME = "agentName";
+	private static final String CREDENTIALS = "credentials";
+	private static final String IOT_DEVICE_SUBMISSION = "IoT device submission";
+
 	private static final int TTL_MINUTES = 10;
 
 	@Value(CoreCommonConstants.$CORE_SYSTEM_NAME)
@@ -86,11 +92,13 @@ public class PoaGeneration {
 		final String agentName
 	) {
 		final JwtClaims claims = new JwtClaims();
+		final String principalPublicKeyString = Base64.getEncoder().encodeToString(principalPublicKey.getEncoded());
+		final String agentPublicKeyString = Base64.getEncoder().encodeToString(agentPublicKey.getEncoded());
 
 		claims.setIssuedAtToNow();
 		claims.setExpirationTimeMinutesInTheFuture(TTL_MINUTES);
-		claims.setStringClaim(PRINCIPAL_PUBLIC_KEY, principalPublicKey.toString());
-		claims.setStringClaim(AGENT_PUBLIC_KEY, agentPublicKey.toString());
+		claims.setStringClaim(PRINCIPAL_PUBLIC_KEY, principalPublicKeyString);
+		claims.setStringClaim(AGENT_PUBLIC_KEY, agentPublicKeyString);
 		claims.setClaim(DESTINATION_NETWORK_ID, "<SSID>"); // TODO: Use value from application.properties
 		claims.setClaim(TRANSFERABLE, 0);
 		claims.setClaim(METADATA, generateMetadata(agentName));
@@ -100,9 +108,9 @@ public class PoaGeneration {
 
 	private Map<String, String> generateMetadata(final String agentName) {
 		return Map.of(
-				"Principal name", systemName,
-				"Agent name", agentName,
-				"Credentials", "IoT device submission");
+				PRINCIPAL_NAME, systemName,
+				AGENT_NAME, agentName,
+				CREDENTIALS, IOT_DEVICE_SUBMISSION);
 	}
 
 	// -------------------------------------------------------------------------------------------------
