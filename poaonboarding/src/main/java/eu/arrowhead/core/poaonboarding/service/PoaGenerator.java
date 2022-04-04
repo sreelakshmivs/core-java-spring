@@ -108,7 +108,7 @@ public class PoaGenerator {
 
 	private Map<String, String> generateMetadata(final String agentName) {
 		return Map.of(
-				PRINCIPAL_NAME, systemName,
+				PRINCIPAL_NAME, systemName.toLowerCase(),
 				AGENT_NAME, agentName,
 				CREDENTIALS, IOT_DEVICE_SUBMISSION);
 	}

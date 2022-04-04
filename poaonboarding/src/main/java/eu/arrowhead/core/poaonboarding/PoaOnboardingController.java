@@ -81,49 +81,24 @@ public class PoaOnboardingController {
 		final X509Certificate requesterCert = getCertificate(request);
 
 		try {
-			final String poa = poaGenerator.generatePoa(requesterCert);
-			prettyPrintToken(poa);
-			return poa;
+			return poaGenerator.generatePoa(requesterCert);
 		} catch (final JoseException ex) {
 			logger.error("Failed to generate PoA", ex);
 			throw new ArrowheadException("Failed to generate PoA");
 		}
 	}
 
-		//-------------------------------------------------------------------------------------------------
-		@ApiOperation(value = "Onboards the device", response = String.class, tags = { CoreCommonConstants.SWAGGER_TAG_CLIENT })
-		@ApiResponses(value = {
-				@ApiResponse(code = HttpStatus.SC_OK, message = ONBOARD_HTTP_200_MESSAGE),
-				@ApiResponse(code = HttpStatus.SC_UNAUTHORIZED, message = CoreCommonConstants.SWAGGER_HTTP_401_MESSAGE),
-				@ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = CoreCommonConstants.SWAGGER_HTTP_500_MESSAGE)
-		})
-		@PostMapping(path = ONBOARD_URI)
-		public String onboard(final HttpServletRequest request, @RequestBody Object body) { // TODO: Change type of body
-			// TODO: Implement
-			return "OK";
-		}
-
-	// -------------------------------------------------------------------------------------------------
-	private void prettyPrintToken(String jwtToken) { // TODO: Remove this method.
-		System.out.println("------------ Decode JWT ------------");
-		String[] split_string = jwtToken.split("\\.");
-		String base64EncodedHeader = split_string[0];
-		String base64EncodedBody = split_string[1];
-		String base64EncodedSignature = split_string[2];
-
-		System.out.println("~~~~~~~~~ JWT Header ~~~~~~~~");
-		Base64 base64Url = new Base64(true);
-		String header = new String(base64Url.decode(base64EncodedHeader));
-		System.out.println("JWT Header : " + header);
-
-
-		System.out.println("~~~~~~~~~ JWT Body ~~~~~~~~~~");
-		String body = new String(base64Url.decode(base64EncodedBody));
-		System.out.println("JWT Body : " + body);
-
-		System.out.println("~~~~~~~~~ JWT Signature ~~~~~");
-		String signature = new String(base64Url.decode(base64EncodedSignature));
-		System.out.println("JWT Signature : " + signature);
+	//-------------------------------------------------------------------------------------------------
+	@ApiOperation(value = "Onboards the device", response = String.class, tags = { CoreCommonConstants.SWAGGER_TAG_CLIENT })
+	@ApiResponses(value = {
+			@ApiResponse(code = HttpStatus.SC_OK, message = ONBOARD_HTTP_200_MESSAGE),
+			@ApiResponse(code = HttpStatus.SC_UNAUTHORIZED, message = CoreCommonConstants.SWAGGER_HTTP_401_MESSAGE),
+			@ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = CoreCommonConstants.SWAGGER_HTTP_500_MESSAGE)
+	})
+	@PostMapping(path = ONBOARD_URI)
+	public String onboard(final HttpServletRequest request, @RequestBody Object body) { // TODO: Change type of body
+		// TODO: Implement
+		return "OK";
 	}
 
 	// -------------------------------------------------------------------------------------------------
