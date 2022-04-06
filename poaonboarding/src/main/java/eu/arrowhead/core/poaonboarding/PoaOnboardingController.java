@@ -13,8 +13,15 @@ package eu.arrowhead.core.poaonboarding;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import java.security.Key;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.cert.X509Certificate;
-import org.apache.commons.codec.binary.Base64;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.http.HttpStatus;
 import org.jose4j.lang.JoseException;
@@ -27,8 +34,13 @@ import org.springframework.web.bind.annotation.RestController;
 import eu.arrowhead.common.CommonConstants;
 import eu.arrowhead.common.CoreCommonConstants;
 import eu.arrowhead.common.exception.ArrowheadException;
-import eu.arrowhead.common.exception.InvalidParameterException;
+import eu.arrowhead.common.exception.AuthException;
+import eu.arrowhead.common.exception.BadPayloadException;
 import eu.arrowhead.core.poaonboarding.service.PoaGenerator;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwt;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -96,19 +108,79 @@ public class PoaOnboardingController {
 			@ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = CoreCommonConstants.SWAGGER_HTTP_500_MESSAGE)
 	})
 	@PostMapping(path = ONBOARD_URI)
-	public String onboard(final HttpServletRequest request, @RequestBody Object body) { // TODO: Change type of body
-		// TODO: Implement
+	public String onboard(final HttpServletRequest request, @RequestBody Map<String, String> body) { // TODO: Change type of body, create DTO class
+		final X509Certificate certificate = getCertificate(request);
+		final PublicKey requesterPublicKey = certificate.getPublicKey();
+		final String poa = body.get("poa");
+		if (!allowedToOnboard(requesterPublicKey, poa)) {
+			throw new BadPayloadException("Principal public key does not match PoA signature");
+		}
+		// TODO: Onboard
 		return "OK";
 	}
 
-	// -------------------------------------------------------------------------------------------------
-	private X509Certificate getCertificate(final HttpServletRequest request) {
-		final X509Certificate[] clientCerts =
-				(X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
-		if (clientCerts == null || clientCerts.length < 1) {
-			throw new InvalidParameterException("Invalid client certificate");
+	//=================================================================================================
+    // assistant methods
+
+	//-------------------------------------------------------------------------------------------------
+	private boolean allowedToOnboard(final PublicKey requesterPublicKey, final String poa) {
+		final PublicKey subcontractorPublicKey = getPrincipalPublicKey(poa);
+
+		// TODO: Ensure that this key belongs to an authorised subcontractor!
+
+		final Claims claims = getValidatedClaims(poa, subcontractorPublicKey);
+		System.out.println(claims.get("agentPublicKey", String.class));
+		// TODO: Check agent public key
+		final String agentPublicKeyString = claims.get("agentPublicKey", String.class);
+		final PublicKey agentPublicKey = (PublicKey) getKey(agentPublicKeyString);
+		return agentPublicKey.equals(requesterPublicKey);
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	private Claims getValidatedClaims(final String poa, final PublicKey signingKey) {
+		try {
+			return Jwts.parser()
+			.setSigningKey(signingKey)
+			.parseClaimsJws(poa)
+			.getBody();
+		} catch (final SignatureException e) {
+			// TODO: Log error
+			throw new BadPayloadException("Principal public key does not match PoA signature");
 		}
-		return clientCerts[0];
+
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	private PublicKey getPrincipalPublicKey(final String poa) {
+		final String[] splitToken = poa.split("\\.");
+		final String unsignedToken = splitToken[0] + "." + splitToken[1] + ".";
+
+		final Jwt<?, ?> jwt = Jwts.parser().parse(unsignedToken);
+		final Claims claims = (Claims) jwt.getBody();
+		final String keyString = claims.get("principalPublicKey", String.class);
+		return (PublicKey) getKey(keyString);
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	private X509Certificate getCertificate(final HttpServletRequest request) {
+		final X509Certificate[] certificates = (X509Certificate[]) request.getAttribute(CommonConstants.ATTR_JAVAX_SERVLET_REQUEST_X509_CERTIFICATE);
+		if (certificates == null || certificates.length == 0) {
+			throw new AuthException("Client certificate is needed!");
+		}
+		return certificates[0];
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	public static Key getKey(final String keyString) {
+		try {
+			final byte[] keyBytes = Base64.getDecoder().decode(keyString);
+			final KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+			return keyFactory.generatePublic(new X509EncodedKeySpec(keyBytes));
+		} catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+			// TODO: Actual exception handling
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 }
