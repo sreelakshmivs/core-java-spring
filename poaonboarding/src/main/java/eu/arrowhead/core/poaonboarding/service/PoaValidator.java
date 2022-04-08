@@ -55,7 +55,7 @@ public class PoaValidator {
 
 		final Claims claims = getValidatedClaims(poa, subcontractorPublicKey);
 		final String agentPublicKeyString = claims.get("agentPublicKey", String.class);
-		final PublicKey agentPublicKey = getKey(agentPublicKeyString);
+		final PublicKey agentPublicKey = getPublicKey(agentPublicKeyString);
 		return agentPublicKey.equals(requesterPublicKey);
 	}
 
@@ -83,18 +83,18 @@ public class PoaValidator {
 		final Jwt<?, ?> jwt = Jwts.parser().parse(unsignedToken);
 		final Claims claims = (Claims) jwt.getBody();
 		final String keyString = claims.get("principalPublicKey", String.class);
-		return getKey(keyString);
+		return getPublicKey(keyString);
 	}
 
 	//-------------------------------------------------------------------------------------------------
-	public static PublicKey getKey(final String keyString) {
+	public static PublicKey getPublicKey(final String keyString) {
 		try {
 			final byte[] keyBytes = Base64.getDecoder().decode(keyString);
 			final KeyFactory keyFactory = KeyFactory.getInstance("RSA");
 			return keyFactory.generatePublic(new X509EncodedKeySpec(keyBytes));
 		} catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
 			// TODO: Actual exception handling
-			logger.error("Could not generate string from key", e);
+			logger.error("Could not generate public key from string", e);
 			return null;
 		}
 	}

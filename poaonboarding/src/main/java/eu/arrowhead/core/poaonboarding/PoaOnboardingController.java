@@ -15,11 +15,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
-import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import org.apache.http.HttpStatus;
 import org.jose4j.lang.JoseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import eu.arrowhead.common.CommonConstants;
 import eu.arrowhead.common.CoreCommonConstants;
+import eu.arrowhead.common.dto.internal.PoaOnboardRequestDTO;
 import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.exception.BadPayloadException;
@@ -101,15 +104,21 @@ public class PoaOnboardingController {
 			@ApiResponse(code = HttpStatus.SC_UNAUTHORIZED, message = CoreCommonConstants.SWAGGER_HTTP_401_MESSAGE),
 			@ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = CoreCommonConstants.SWAGGER_HTTP_500_MESSAGE)
 	})
-	@PostMapping(path = ONBOARD_URI)
-	public String onboard(final HttpServletRequest request, @RequestBody Map<String, String> body) { // TODO: Change type of body, create DTO class
+	@Validated
+	@PostMapping(path = ONBOARD_URI, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public String onboard(final HttpServletRequest request, @Valid @RequestBody final PoaOnboardRequestDTO body) {
+
 		final X509Certificate certificate = getCertificate(request);
 		final PublicKey requesterPublicKey = certificate.getPublicKey();
-		final String poa = body.get("poa");
+		final String poa = body.getPoa();
+		final String requesterPrivateKey = body.getPrivateKey();
+
+		// TODO: Validate private key, ensure that it matches the public key.
+
 		if (!poaValidator.allowedToOnboard(requesterPublicKey, poa)) {
 			throw new BadPayloadException("Invalid public key or PoA");
 		}
-		// TODO: Onboard
+
 		return "OK";
 	}
 
