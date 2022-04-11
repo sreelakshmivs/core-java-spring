@@ -13,6 +13,7 @@ package eu.arrowhead.common.dto.internal;
 
 import java.io.Serializable;
 import javax.validation.constraints.NotNull;
+import eu.arrowhead.common.dto.shared.KeyPairDTO;
 
 public class PoaOnboardRequestDTO implements Serializable {
 
@@ -23,7 +24,7 @@ public class PoaOnboardRequestDTO implements Serializable {
 	private String poa;
 
 	@NotNull
-	private String privateKey;
+	private KeyPairDTO keyPair;
 
 	//=================================================================================================
 	// methods
@@ -32,17 +33,17 @@ public class PoaOnboardRequestDTO implements Serializable {
 	public PoaOnboardRequestDTO() {}
 
 	//-------------------------------------------------------------------------------------------------
-	public PoaOnboardRequestDTO(final String poa, final String privateKey) {
+	public PoaOnboardRequestDTO(final String poa, final KeyPairDTO keyPair) {
 		this.poa = poa;
-		this.privateKey = privateKey;
+		this.keyPair = keyPair;
 	}
 
 	//-------------------------------------------------------------------------------------------------
 	public String getPoa() { return poa; }
-	public String getPrivateKey() { return privateKey; }
+	public KeyPairDTO getKeyPair() { return keyPair; }
 
 	//-------------------------------------------------------------------------------------------------
 	public void setPoa(final String poa) { this.poa = poa; }
-	public void setPrivateKey(final String privateKey) { this.privateKey = privateKey; }
+	public void setKeyPair(final KeyPairDTO keyPair) { this.keyPair = keyPair; }
 
 }

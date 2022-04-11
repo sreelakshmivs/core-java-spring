@@ -13,8 +13,10 @@ package eu.arrowhead.core.poaonboarding;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import java.security.KeyPair;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import org.apache.http.HttpStatus;
@@ -27,14 +29,20 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponents;
 import eu.arrowhead.common.CommonConstants;
 import eu.arrowhead.common.CoreCommonConstants;
+import eu.arrowhead.common.SecurityUtilities;
+import eu.arrowhead.common.drivers.CertificateAuthorityDriver;
+import eu.arrowhead.common.dto.internal.CertificateSigningRequestDTO;
+import eu.arrowhead.common.dto.internal.CertificateSigningResponseDTO;
 import eu.arrowhead.common.dto.internal.PoaOnboardRequestDTO;
+import eu.arrowhead.common.dto.shared.CertificateType;
 import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.exception.AuthException;
-import eu.arrowhead.common.exception.BadPayloadException;
 import eu.arrowhead.core.poaonboarding.service.PoaGenerator;
 import eu.arrowhead.core.poaonboarding.service.PoaValidator;
+import io.jsonwebtoken.Claims;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -62,6 +70,12 @@ public class PoaOnboardingController {
 
 	@Autowired
 	private PoaValidator poaValidator;
+
+	@Autowired
+	CertificateAuthorityDriver caDriver;
+
+	@Autowired
+	SecurityUtilities securityUtilities;
 
 	//=================================================================================================
 	// methods
@@ -106,24 +120,41 @@ public class PoaOnboardingController {
 	})
 	@Validated
 	@PostMapping(path = ONBOARD_URI, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	public String onboard(final HttpServletRequest request, @Valid @RequestBody final PoaOnboardRequestDTO body) {
-
+	public CertificateSigningResponseDTO onboard(final HttpServletRequest request, @Valid @RequestBody final PoaOnboardRequestDTO body) {
 		final X509Certificate certificate = getCertificate(request);
 		final PublicKey requesterPublicKey = certificate.getPublicKey();
 		final String poa = body.getPoa();
-		final String requesterPrivateKey = body.getPrivateKey();
+		final Claims claims = poaValidator.parsePoa(requesterPublicKey, poa);
+		final Map<String, String> metadata = claims.get("metadata", Map.class);
+		final String name = metadata.get("agentName");
+		final KeyPair keyPair = securityUtilities.extractKeyPair(body.getKeyPair());
 
-		// TODO: Validate private key, ensure that it matches the public key.
-
-		if (!poaValidator.allowedToOnboard(requesterPublicKey, poa)) {
-			throw new BadPayloadException("Invalid public key or PoA");
-		}
-
-		return "OK";
+		// TODO: Check that the keys match?
+		final String host = request.getRemoteHost();
+        final String address = request.getRemoteAddr();
+		final CertificateSigningResponseDTO result = sendCsrRequest(name, host, address, keyPair);
+		System.out.println("------------------------");
+		System.out.println(result);
+		System.out.println("------------------------");
+		return result;
 	}
 
 	//=================================================================================================
     // assistant methods
+
+	//-------------------------------------------------------------------------------------------------
+	private CertificateSigningResponseDTO sendCsrRequest(final String commonName, final String host, final String address, final KeyPair keyPair) {
+		final String csr;
+		try {
+            csr = securityUtilities.createCertificateSigningRequest(commonName, keyPair, CertificateType.AH_ONBOARDING, host, address);
+        } catch (final Exception e) {
+            logger.error(e);
+            throw new ArrowheadException("Unable to create certificate signing request");
+        }
+
+		final var csrDTO = new CertificateSigningRequestDTO(csr);
+		return caDriver.signCertificate(csrDTO);
+	}
 
 	//-------------------------------------------------------------------------------------------------
 	private X509Certificate getCertificate(final HttpServletRequest request) {

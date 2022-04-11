@@ -12,9 +12,11 @@
 package eu.arrowhead.core.poaonboarding;
 
 import java.util.Base64;
+import java.util.List;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 import eu.arrowhead.common.ApplicationInitListener;
+import eu.arrowhead.common.core.CoreSystemService;
 
 @Component
 public class PoaOnboardingApplicationInitListener extends ApplicationInitListener {
@@ -28,6 +30,12 @@ public class PoaOnboardingApplicationInitListener extends ApplicationInitListene
 		if (sslProperties.isSslEnabled()) {
 			logger.debug("AuthInfo: {}", Base64.getEncoder().encodeToString(publicKey.getEncoded()));
 		}
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	@Override
+	protected List<CoreSystemService> getRequiredCoreSystemServiceUris() {
+		return List.of(CoreSystemService.CERTIFICATEAUTHORITY_SIGN_SERVICE);
 	}
 
 }

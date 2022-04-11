@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import eu.arrowhead.common.CommonConstants;
 import eu.arrowhead.common.CoreCommonConstants;
+import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.exception.BadPayloadException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwt;
@@ -48,7 +49,7 @@ public class PoaValidator {
 	//=================================================================================================
 	// methods
 
-	public boolean allowedToOnboard(final PublicKey requesterPublicKey, final String poa) {
+	public Claims parsePoa(final PublicKey requesterPublicKey, final String poa) {
 		final PublicKey subcontractorPublicKey = getPrincipalPublicKey(poa);
 
 		// TODO: Ensure that this key belongs to an authorised subcontractor!
@@ -56,7 +57,10 @@ public class PoaValidator {
 		final Claims claims = getValidatedClaims(poa, subcontractorPublicKey);
 		final String agentPublicKeyString = claims.get("agentPublicKey", String.class);
 		final PublicKey agentPublicKey = getPublicKey(agentPublicKeyString);
-		return agentPublicKey.equals(requesterPublicKey);
+		if (!agentPublicKey.equals(requesterPublicKey)) {
+			throw new ArrowheadException("Invalid PoA or public key");
+		}
+		return claims;
 	}
 
 
@@ -71,8 +75,8 @@ public class PoaValidator {
 			.parseClaimsJws(poa)
 			.getBody();
 		} catch (final SignatureException e) {
-			// TODO: Log error
-			throw new BadPayloadException("Principal public key does not match PoA signature");
+			logger.error(e);
+			throw new BadPayloadException("PoA signature could not be verified");
 		}
 	}
 

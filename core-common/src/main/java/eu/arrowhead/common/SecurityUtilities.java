@@ -299,27 +299,39 @@ public class SecurityUtilities {
         if (Objects.nonNull(keyPairDTO) &&
             Objects.nonNull(keyPairDTO.getPublicKey()) &&
             Objects.nonNull(keyPairDTO.getPrivateKey())) {
-
-            final String encodedPublicKey = keyPairDTO.getPublicKey();
-            final String encodedPrivateKey = keyPairDTO.getPrivateKey();
-            final String keyFormat = keyPairDTO.getKeyFormat();
-
-
-            if (Objects.nonNull(keyFormat)) {
-                keyPair = getKeyPairFromBase64EncodedStringsForFormat(encodedPublicKey, encodedPrivateKey, keyFormat);
-            } else {
-                try {
-                    keyPair = getKeyPairFromBase64EncodedStringsForFormat(encodedPublicKey, encodedPrivateKey, PKCS8_FORMAT);
-                } catch (final AuthException e1) {
-                    try {
-                        keyPair = getKeyPairFromBase64EncodedStringsForFormat(encodedPublicKey, encodedPrivateKey, PKCS1_FORMAT);
-                    } catch (final AuthException e2) {
-                        keyPair = getKeyPairFromBase64EncodedStringsForFormat(encodedPublicKey, encodedPrivateKey, X509_FORMAT);
-                    }
-                }
-            }
+            return extractKeyPair(keyPairDTO);
         } else {
             keyPair = generateKeyPair();
+        }
+
+        return keyPair;
+    }
+
+    //-------------------------------------------------------------------------------------------------
+    public KeyPair extractKeyPair(final KeyPairDTO keyPairDTO) {
+        Assert.notNull(keyPairDTO, "keyPairDTO must not be null");
+
+        final String encodedPublicKey = keyPairDTO.getPublicKey();
+        final String encodedPrivateKey = keyPairDTO.getPrivateKey();
+
+        Assert.notNull(encodedPublicKey, "public key must not be null");
+        Assert.notNull(encodedPrivateKey, "private key must not be null");
+
+        final String keyFormat = keyPairDTO.getKeyFormat();
+        KeyPair keyPair;
+
+        if (Objects.nonNull(keyFormat)) {
+            keyPair = getKeyPairFromBase64EncodedStringsForFormat(encodedPublicKey, encodedPrivateKey, keyFormat);
+        } else {
+            try {
+                keyPair = getKeyPairFromBase64EncodedStringsForFormat(encodedPublicKey, encodedPrivateKey, PKCS8_FORMAT);
+            } catch (final AuthException e1) {
+                try {
+                    keyPair = getKeyPairFromBase64EncodedStringsForFormat(encodedPublicKey, encodedPrivateKey, PKCS1_FORMAT);
+                } catch (final AuthException e2) {
+                    keyPair = getKeyPairFromBase64EncodedStringsForFormat(encodedPublicKey, encodedPrivateKey, X509_FORMAT);
+                }
+            }
         }
 
         return keyPair;

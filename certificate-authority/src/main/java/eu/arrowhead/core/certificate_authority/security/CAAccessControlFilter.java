@@ -29,9 +29,9 @@ public class CAAccessControlFilter extends CoreSystemAccessControlFilter {
 
 	// =================================================================================================
 	// members
-	
+ 
 	private static final CoreSystem[] allowedCoreSystemsForTrustedKeyHandling = { CoreSystem.ONBOARDINGCONTROLLER, CoreSystem.DEVICEREGISTRY, CoreSystem.SYSTEMREGISTRY };
-	private static final CoreSystem[] allowedCoreSystemsForCertificateHandling = { CoreSystem.ONBOARDINGCONTROLLER, CoreSystem.DEVICEREGISTRY, CoreSystem.SYSTEMREGISTRY };
+	private static final CoreSystem[] allowedCoreSystemsForCertificateHandling = { CoreSystem.POAONBOARDING, CoreSystem.ONBOARDINGCONTROLLER, CoreSystem.DEVICEREGISTRY, CoreSystem.SYSTEMREGISTRY };
 
 	// =================================================================================================
 	// assistant methods
