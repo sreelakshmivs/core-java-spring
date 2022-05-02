@@ -152,6 +152,9 @@ public class CoreCommonConstants {
 	public static final String ORCHESTRATOR_IS_GATEKEEPER_PRESENT = "gatekeeper_is_present";
 	public static final String $ORCHESTRATOR_IS_GATEKEEPER_PRESENT_WD = "${" + ORCHESTRATOR_IS_GATEKEEPER_PRESENT + ":" + CoreDefaults.DEFAULT_ORCHESTRATOR_IS_GATEKEEPER_PRESENT + "}";
 
+	public static final String POA_ONBOARDING_NETWORK_NAME = "network_name";
+	public static final String $POA_ONBOARDING_NETWORK_NAME = "${" + POA_ONBOARDING_NETWORK_NAME + "}";
+
 	public static final String RELAY_CHECK_INTERVAL = "relay_check_interval"; // in seconds
 	public static final String $RELAY_CHECK_INTERVAL_WD = "${" + RELAY_CHECK_INTERVAL + ":" + CoreDefaults.DEFAULT_RELAY_CHECK_INTERVAL + "}";
 	public static final String GATEKEEPER_IS_GATEWAY_PRESENT = "gateway_is_present";

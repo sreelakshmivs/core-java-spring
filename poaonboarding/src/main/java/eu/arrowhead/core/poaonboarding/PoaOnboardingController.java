@@ -29,7 +29,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.util.UriComponents;
 import eu.arrowhead.common.CommonConstants;
 import eu.arrowhead.common.CoreCommonConstants;
 import eu.arrowhead.common.SecurityUtilities;
@@ -132,10 +131,7 @@ public class PoaOnboardingController {
 		// TODO: Check that the keys match?
 		final String host = request.getRemoteHost();
         final String address = request.getRemoteAddr();
-		final CertificateSigningResponseDTO result = sendCsrRequest(name, host, address, keyPair);
-		System.out.println("------------------------");
-		System.out.println(result);
-		System.out.println("------------------------");
+		final CertificateSigningResponseDTO result = sendCsrRequest(name, host, address, keyPair); // TODO: Error handling
 		return result;
 	}
 

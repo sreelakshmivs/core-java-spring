@@ -59,6 +59,9 @@ public class PoaGenerator {
 	@Value(CoreCommonConstants.$CORE_SYSTEM_NAME)
 	private String systemName;
 
+	@Value(CoreCommonConstants.$POA_ONBOARDING_NETWORK_NAME)
+	private String networkName;
+
 	@Resource(name = CommonConstants.ARROWHEAD_CONTEXT)
 	private Map<String,Object> arrowheadContext;
 
@@ -99,7 +102,7 @@ public class PoaGenerator {
 		claims.setExpirationTimeMinutesInTheFuture(TTL_MINUTES);
 		claims.setStringClaim(PRINCIPAL_PUBLIC_KEY, principalPublicKeyString);
 		claims.setStringClaim(AGENT_PUBLIC_KEY, agentPublicKeyString);
-		claims.setClaim(DESTINATION_NETWORK_ID, "<SSID>"); // TODO: Use value from application.properties
+		claims.setClaim(DESTINATION_NETWORK_ID, networkName);
 		claims.setClaim(TRANSFERABLE, 0);
 		claims.setClaim(METADATA, generateMetadata(agentName));
 

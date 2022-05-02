@@ -53,6 +53,8 @@ public class PoaValidator {
 		final PublicKey subcontractorPublicKey = getPrincipalPublicKey(poa);
 
 		// TODO: Ensure that this key belongs to an authorised subcontractor!
+		// TODO: Ensure that the subcontractor's onboarding powers have not
+		// expired.
 
 		final Claims claims = getValidatedClaims(poa, subcontractorPublicKey);
 		final String agentPublicKeyString = claims.get("agentPublicKey", String.class);
