@@ -29,14 +29,19 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponents;
 import eu.arrowhead.common.CommonConstants;
 import eu.arrowhead.common.CoreCommonConstants;
 import eu.arrowhead.common.SecurityUtilities;
+import eu.arrowhead.common.core.CoreSystemService;
 import eu.arrowhead.common.drivers.CertificateAuthorityDriver;
+import eu.arrowhead.common.drivers.DriverUtilities;
 import eu.arrowhead.common.dto.internal.CertificateSigningRequestDTO;
 import eu.arrowhead.common.dto.internal.CertificateSigningResponseDTO;
 import eu.arrowhead.common.dto.internal.PoaOnboardRequestDTO;
+import eu.arrowhead.common.dto.internal.PoaOnboardingResponseDTO;
 import eu.arrowhead.common.dto.shared.CertificateType;
+import eu.arrowhead.common.dto.shared.ServiceEndpoint;
 import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.core.poaonboarding.service.PoaGenerator;
@@ -63,6 +68,9 @@ public class PoaOnboardingController {
 
 	private static final String POA_URI = "/poa";
 
+	@Autowired
+	private DriverUtilities driverUtilities;
+	
 	@Autowired
 	private PoaGenerator poaGenerator;
 
@@ -118,7 +126,7 @@ public class PoaOnboardingController {
 	})
 	@Validated
 	@PostMapping(path = CommonConstants.OP_POA_ONBOARDING_WITH_NAME, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	public CertificateSigningResponseDTO onboardWithName(final HttpServletRequest request, @Valid @RequestBody final PoaOnboardRequestDTO body) {
+	public PoaOnboardingResponseDTO onboardWithName(final HttpServletRequest request, @Valid @RequestBody final PoaOnboardRequestDTO body) {
 		final X509Certificate certificate = getCertificate(request);
 		final PublicKey requesterPublicKey = certificate.getPublicKey();
 		final String poa = body.getPoa();
@@ -130,8 +138,15 @@ public class PoaOnboardingController {
 		// TODO: Check that the keys match?
 		final String host = request.getRemoteHost();
         final String address = request.getRemoteAddr();
-		final CertificateSigningResponseDTO result = sendCsrRequest(name, host, address, keyPair); // TODO: Error handling
-		return result;
+		final CertificateSigningResponseDTO csrResponse = sendCsrRequest(name, host, address, keyPair); // TODO: Error handling
+	
+		return new PoaOnboardingResponseDTO(
+			findServiceEndpoint(CoreSystemService.DEVICEREGISTRY_ONBOARDING_WITH_CSR_SERVICE),
+			findServiceEndpoint(CoreSystemService.SYSTEMREGISTRY_ONBOARDING_WITH_NAME_SERVICE),
+			findServiceEndpoint(CoreSystemService.SERVICEREGISTRY_REGISTER_SERVICE),
+			findServiceEndpoint(CoreSystemService.ORCHESTRATION_SERVICE),
+			csrResponse.getCertificateChain()
+		);
 	}
 
 	@ApiOperation(value = "Onboards the device", response = String.class, tags = { CoreCommonConstants.SWAGGER_TAG_CLIENT })
@@ -142,7 +157,7 @@ public class PoaOnboardingController {
 	})
 	@Validated
 	@PostMapping(path = CommonConstants.OP_POA_ONBOARDING_WITH_CSR, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	public CertificateSigningResponseDTO onboardWithCsr(final HttpServletRequest request, @Valid @RequestBody final PoaOnboardRequestDTO body) {
+	public PoaOnboardingResponseDTO onboardWithCsr(final HttpServletRequest request, @Valid @RequestBody final PoaOnboardRequestDTO body) {
 		// TODO: Implement!
 		throw new UnsupportedOperationException("Not implemented");
 	}
@@ -171,6 +186,12 @@ public class PoaOnboardingController {
 			throw new AuthException("Client certificate is needed!");
 		}
 		return certificates[0];
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	private ServiceEndpoint findServiceEndpoint(final CoreSystemService coreSystemService) {
+		final UriComponents service = driverUtilities.findUriByServiceRegistry(coreSystemService);
+		return new ServiceEndpoint(coreSystemService, service.toUri());
 	}
 
 }
