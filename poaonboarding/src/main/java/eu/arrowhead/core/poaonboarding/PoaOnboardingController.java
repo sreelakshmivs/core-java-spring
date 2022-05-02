@@ -11,8 +11,6 @@
 
 package eu.arrowhead.core.poaonboarding;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
@@ -20,6 +18,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import org.apache.http.HttpStatus;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jose4j.lang.JoseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -62,7 +62,6 @@ public class PoaOnboardingController {
 	private static final String ONBOARD_HTTP_200_MESSAGE = "Device onboarding successful"; // TODO: Change this formulation
 
 	private static final String POA_URI = "/poa";
-	private static final String ONBOARD_URI = "/onboard";
 
 	@Autowired
 	private PoaGenerator poaGenerator;
@@ -118,8 +117,8 @@ public class PoaOnboardingController {
 			@ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = CoreCommonConstants.SWAGGER_HTTP_500_MESSAGE)
 	})
 	@Validated
-	@PostMapping(path = ONBOARD_URI, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	public CertificateSigningResponseDTO onboard(final HttpServletRequest request, @Valid @RequestBody final PoaOnboardRequestDTO body) {
+	@PostMapping(path = CommonConstants.OP_POA_ONBOARDING_WITH_NAME, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public CertificateSigningResponseDTO onboardWithName(final HttpServletRequest request, @Valid @RequestBody final PoaOnboardRequestDTO body) {
 		final X509Certificate certificate = getCertificate(request);
 		final PublicKey requesterPublicKey = certificate.getPublicKey();
 		final String poa = body.getPoa();
@@ -133,6 +132,19 @@ public class PoaOnboardingController {
         final String address = request.getRemoteAddr();
 		final CertificateSigningResponseDTO result = sendCsrRequest(name, host, address, keyPair); // TODO: Error handling
 		return result;
+	}
+
+	@ApiOperation(value = "Onboards the device", response = String.class, tags = { CoreCommonConstants.SWAGGER_TAG_CLIENT })
+	@ApiResponses(value = {
+			@ApiResponse(code = HttpStatus.SC_OK, message = ONBOARD_HTTP_200_MESSAGE),
+			@ApiResponse(code = HttpStatus.SC_UNAUTHORIZED, message = CoreCommonConstants.SWAGGER_HTTP_401_MESSAGE),
+			@ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = CoreCommonConstants.SWAGGER_HTTP_500_MESSAGE)
+	})
+	@Validated
+	@PostMapping(path = CommonConstants.OP_POA_ONBOARDING_WITH_CSR, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public CertificateSigningResponseDTO onboardWithCsr(final HttpServletRequest request, @Valid @RequestBody final PoaOnboardRequestDTO body) {
+		// TODO: Implement!
+		throw new UnsupportedOperationException("Not implemented");
 	}
 
 	//=================================================================================================

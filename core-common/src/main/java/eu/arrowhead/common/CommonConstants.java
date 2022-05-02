@@ -127,6 +127,9 @@ public class CommonConstants {
 	public static final String CORE_SERVICE_ONBOARDING_WITH_SHARED_SECRET_AND_NAME = "onboarding-with-shared-secret-and-name";
 	public static final String CORE_SERVICE_ONBOARDING_WITH_SHARED_SECRET_AND_CSR = "onboarding-with-shared-secret-and-csr";
 
+	public static final String CORE_SERVICE_POA_ONBOARDING_WITH_NAME = "poa-onboarding-with-name";
+	public static final String CORE_SERVICE_POA_ONBOARDING_WITH_CSR = "poa-onboarding-with-csr";
+
     public static final String CORE_SERVICE_TRANSLATOR = "translation-service";
     public static final String CORE_SERVICE_TRANSLATOR_FIWARE = "translation-fiware-service";
     public static final String CORE_SERVICE_TRANSLATOR_PLUGIN = "translation-plugin-service";
@@ -175,6 +178,9 @@ public class CommonConstants {
 	public static final String OP_ONBOARDING_WITH_CERTIFICATE_AND_CSR = ONBOARDING_AUTH_WITH_CERTIFICATE_URI + ONBOARDING_WITH_CSR_URI;
 	public static final String OP_ONBOARDING_WITH_SHARED_SECRET_AND_NAME = ONBOARDING_AUTH_WITH_SHARED_SECRET_URI + ONBOARDING_WITH_NAME_URI;
 	public static final String OP_ONBOARDING_WITH_SHARED_SECRET_AND_CSR = ONBOARDING_AUTH_WITH_SHARED_SECRET_URI + ONBOARDING_WITH_CSR_URI;
+
+	public static final String OP_POA_ONBOARDING_WITH_NAME = "/onboard/name";
+	public static final String OP_POA_ONBOARDING_WITH_CSR = "/onboard/csr";
 
 	public static final String SERVICEREGISTRY_URI = "/serviceregistry";
 	public static final String OP_SERVICEREGISTRY_REGISTER_URI = "/register";

@@ -114,7 +114,8 @@ public enum CoreSystem {
 	
 	PLANTDESCRIPTIONENGINE(Defaults.DEFAULT_PLANT_DESCRIPTION_ENGINE_PORT, List.of()), //TODO add PDE services
 	
-	POAONBOARDING(Defaults.DEFAULT_POA_ONBOARDING_PORT, List.of());  //TODO add PoA onboarding services
+    POAONBOARDING(Defaults.DEFAULT_POA_ONBOARDING_PORT, List.of(CoreSystemService.POA_ONBOARDING_WITH_NAME_SERVICE,
+														    		CoreSystemService.POA_ONBOARDING_WITH_CSR_SERVICE));
 
 	//=================================================================================================
 	// members
