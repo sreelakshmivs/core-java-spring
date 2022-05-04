@@ -12,17 +12,22 @@
 package eu.arrowhead.common.dto.shared;
 
 import java.io.Serializable;
-import java.util.Objects;
+import javax.validation.constraints.NotBlank;
 
 public class SubcontractorRequestDTO implements Serializable {
 	
 	//=================================================================================================
 	// members
 	
+	@NotBlank(message = "The name field is mandatory")
 	private String name;
+
+	@NotBlank(message = "The publicKey field is mandatory")
 	private String publicKey;
-	// TODO: Add validBefore!
-	
+
+	@NotBlank(message = "The validBefore field is mandatory")
+	private String validBefore;
+
 	//=================================================================================================
 	// methods
 
@@ -30,23 +35,20 @@ public class SubcontractorRequestDTO implements Serializable {
 	public SubcontractorRequestDTO() {}
 
 	//-------------------------------------------------------------------------------------------------
-	public SubcontractorRequestDTO(final String name, final String publicKey) {
+	public SubcontractorRequestDTO(final String name, final String publicKey, final String validBefore) {
 		this.name = name;
 		this.publicKey = publicKey;
+		this.validBefore = validBefore;
 	}
 
 	//-------------------------------------------------------------------------------------------------
 	public String getName() { return name; }
 	public String getPublicKey() { return publicKey; }
+	public String getValidBefore() { return validBefore; }
 	
 	//-------------------------------------------------------------------------------------------------
 	public void setName(final String name) { this.name = name; }
 	public void setPublicKey(final String publicKey) { this.publicKey = publicKey; }
-	
-	//-------------------------------------------------------------------------------------------------
-	@Override
-	public int hashCode() {
-		return Objects.hash(name, publicKey);
-	}
+	public void setValidBefore(final String validBefore) { this.validBefore = validBefore; }
 	
 }

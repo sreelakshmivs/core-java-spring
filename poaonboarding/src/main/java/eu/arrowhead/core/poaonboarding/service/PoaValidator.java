@@ -16,17 +16,22 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.time.ZonedDateTime;
 import java.util.Base64;
 import java.util.Map;
 import javax.annotation.Resource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import eu.arrowhead.common.CommonConstants;
 import eu.arrowhead.common.CoreCommonConstants;
+import eu.arrowhead.common.database.entity.Subcontractor;
 import eu.arrowhead.common.exception.ArrowheadException;
+import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.exception.BadPayloadException;
+import eu.arrowhead.core.poaonboarding.database.service.SubcontractorDBService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.Jwts;
@@ -46,20 +51,33 @@ public class PoaValidator {
 	@Resource(name = CommonConstants.ARROWHEAD_CONTEXT)
 	private Map<String,Object> arrowheadContext;
 
+	@Autowired
+	SubcontractorDBService subcontractorDBService;
+	
 	//=================================================================================================
 	// methods
 
 	public Claims parsePoa(final PublicKey requesterPublicKey, final String poa) {
 		final PublicKey subcontractorPublicKey = getPrincipalPublicKey(poa);
-
-		// TODO: Ensure that this key belongs to an authorised subcontractor!
-		// TODO: Ensure that the subcontractor's onboarding powers have not
-		// expired.
-
 		final Claims claims = getValidatedClaims(poa, subcontractorPublicKey);
+		final String principalPublicKey = claims.get("principalPublicKey", String.class);
+		final Map<String, String> metadata = claims.get("metadata", Map.class);
+		final String principalName = metadata.get("principalName");
+		final Subcontractor subcontractor = subcontractorDBService.getSubcontractorByName(principalName);
+
+		final boolean correctPublicKey = subcontractor.getPublicKey().equals(principalPublicKey);
+		final boolean hasExpired = subcontractor.getValidBefore().isBefore(ZonedDateTime.now());
+
+		if (!correctPublicKey) {
+			throw new AuthException("Invalid subcontractor public key");
+		}
+
+		if (hasExpired) {
+			throw new AuthException("The subcontractor's rights have expired");
+		}
+
 		final String agentPublicKeyString = claims.get("agentPublicKey", String.class);
-		final PublicKey agentPublicKey = getPublicKey(agentPublicKeyString);
-		if (!agentPublicKey.equals(requesterPublicKey)) {
+		if (!toKey(agentPublicKeyString).equals(requesterPublicKey)) {
 			throw new ArrowheadException("Invalid PoA or public key");
 		}
 		return claims;
@@ -89,11 +107,11 @@ public class PoaValidator {
 		final Jwt<?, ?> jwt = Jwts.parser().parse(unsignedToken);
 		final Claims claims = (Claims) jwt.getBody();
 		final String keyString = claims.get("principalPublicKey", String.class);
-		return getPublicKey(keyString);
+		return toKey(keyString);
 	}
 
 	//-------------------------------------------------------------------------------------------------
-	public static PublicKey getPublicKey(final String keyString) {
+	public static PublicKey toKey(final String keyString) {
 		try {
 			final byte[] keyBytes = Base64.getDecoder().decode(keyString);
 			final KeyFactory keyFactory = KeyFactory.getInstance("RSA");

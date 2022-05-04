@@ -71,7 +71,7 @@ public class SubcontractorController {
 	})
 	@GetMapping(path = SUBCONTRACTOR_BY_NAME_URI)
 	public SubcontractorResponseDTO getTrustedSubcontractor(@PathVariable(value = PATH_VARIABLE_NAME) final String name) {
-		return subcontractorDBService.getSubcontractorByIdResponse(name);
+		return subcontractorDBService.getSubcontractorByNameResponse(name);
 	}
 
 	//-------------------------------------------------------------------------------------------------

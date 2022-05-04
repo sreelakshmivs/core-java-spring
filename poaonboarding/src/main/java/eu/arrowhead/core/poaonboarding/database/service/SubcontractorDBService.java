@@ -11,6 +11,7 @@
 
 package eu.arrowhead.core.poaonboarding.database.service;
 
+import java.time.ZonedDateTime;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,7 +49,7 @@ public class SubcontractorDBService {
 	// methods
 
 	//-------------------------------------------------------------------------------------------------
-	public SubcontractorResponseDTO getSubcontractorByIdResponse(final String name) {		
+	public SubcontractorResponseDTO getSubcontractorByNameResponse(final String name) {		
 		logger.debug("getSubcontractorByIdResponse started...");
 		
 		final Subcontractor subcontractor = getSubcontractorByName(name);
@@ -77,7 +78,7 @@ public class SubcontractorDBService {
 		logger.debug("removeSubcontractorByName started...");
 		try {
 			if (!subcontractorRepository.existsByName(name)) {
-				throw new InvalidParameterException("Subcontractor with name '" + name + "' does not exist");
+				throw new InvalidParameterException("Subcontractor with name '" + name + "' not found");
 			}
 			subcontractorRepository.deleteByName(name);
 			subcontractorRepository.flush();
@@ -89,11 +90,8 @@ public class SubcontractorDBService {
 		}		
 	}
 
-	//=================================================================================================
-	// assistant methods	
-
 	//-------------------------------------------------------------------------------------------------
-	private Subcontractor getSubcontractorByName(final String name) {		
+	public Subcontractor getSubcontractorByName(final String name) {		
 		logger.debug("getSubcontractorByName started...");
 		
 		if (name.isEmpty()) {
@@ -102,8 +100,8 @@ public class SubcontractorDBService {
 		
 		try {
 			final Optional<Subcontractor> subcontractorOption = subcontractorRepository.findByName(name);
-			if (subcontractorOption.isEmpty()){
-				throw new InvalidParameterException("Subcontractor with name " + name + " not found.");		
+			if (subcontractorOption.isEmpty()) {
+				throw new InvalidParameterException("Subcontractor with name '" + name + "' not found.");		
 			}
 	
 			return subcontractorOption.get();
@@ -114,6 +112,9 @@ public class SubcontractorDBService {
 			throw new ArrowheadException(CoreCommonConstants.DATABASE_OPERATION_EXCEPTION_MSG);
 		}
 	}
+
+	//=================================================================================================
+	// assistant methods	
 
 	//-------------------------------------------------------------------------------------------------
 	private Page<Subcontractor> getSubcontractors(final int page, final int size, final Direction direction, final String sortField) {
@@ -140,7 +141,9 @@ public class SubcontractorDBService {
 	@Transactional(rollbackFor = ArrowheadException.class)
 	private Subcontractor createSubcontractorEntity(final SubcontractorRequestDTO request) {
 		logger.debug("createSubcontractorEntity started...");
-		Subcontractor subcontractor = new Subcontractor(request.getName(), request.getPublicKey());
+
+		final ZonedDateTime validBefore = ZonedDateTime.parse(request.getValidBefore());
+		Subcontractor subcontractor = new Subcontractor(request.getName(), request.getPublicKey(), validBefore);
 
 		try {
 			return subcontractorRepository.saveAndFlush(subcontractor);	
