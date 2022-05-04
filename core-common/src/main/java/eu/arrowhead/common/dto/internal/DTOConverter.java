@@ -25,10 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
 import org.springframework.data.domain.Page;
 import org.springframework.util.Assert;
-
 import eu.arrowhead.common.Utilities;
 import eu.arrowhead.common.database.entity.AuthorizationInterCloud;
 import eu.arrowhead.common.database.entity.AuthorizationInterCloudInterfaceConnection;
@@ -61,6 +59,7 @@ import eu.arrowhead.common.database.entity.ServiceDefinition;
 import eu.arrowhead.common.database.entity.ServiceInterface;
 import eu.arrowhead.common.database.entity.ServiceRegistry;
 import eu.arrowhead.common.database.entity.ServiceRegistryInterfaceConnection;
+import eu.arrowhead.common.database.entity.Subcontractor;
 import eu.arrowhead.common.database.entity.Subscription;
 import eu.arrowhead.common.database.entity.SubscriptionPublisherConnection;
 import eu.arrowhead.common.database.entity.System;
@@ -1194,6 +1193,26 @@ public class DTOConverter {
 				.setTrustedKeys(trustedKeyEntryListToTrustedKeysResponseDTOList(trustedKeyEntryList.getContent()));
 
 		return trustedKeysResponseDTO;
+	}
+
+	// -------------------------------------------------------------------------------------------------
+	public static SubcontractorResponseDTO convertSubcontractorToSubcontractorResponseDTO(final Subcontractor subcontractor) {
+		Assert.notNull(subcontractor, "Subcontractor is null");
+
+		// TODO: Is it okay to just "toString" the dates?
+		return new SubcontractorResponseDTO(
+			subcontractor.getPublicKey(), subcontractor.getName(), subcontractor.getValidAfter().toString(), subcontractor.getValidBefore().toString()
+		);
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	public static SubcontractorListResponseDTO convertSubcontractorListToSubcontractorListResponseDTO(final Iterable<Subcontractor> page) {
+		Assert.notNull(page, "Page must not be null");
+		final List<SubcontractorResponseDTO> list = new ArrayList<>();
+		for (final Subcontractor entry : page) {
+			list.add(convertSubcontractorToSubcontractorResponseDTO(entry));
+		}
+		return new SubcontractorListResponseDTO(list, list.size());
 	}
 	
 	//=================================================================================================

@@ -300,6 +300,7 @@ public class CommonConstants {
     public static final String OP_TRANSLATOR_PLUGIN_URI = "/plugin";
 
 	public static final String POA_ONBOARDING_URI = "/poaonboarding";
+	public static final String POA_SUBCONTRACTOR_URI = POA_ONBOARDING_URI + "/subcontractor";
 
 	public static final String SWAGGER_COMMON_PACKAGE = "eu.arrowhead.common.swagger";
 	public static final String SWAGGER_UI_URI = "/swagger-ui.html";

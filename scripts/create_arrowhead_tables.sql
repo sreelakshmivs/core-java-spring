@@ -729,3 +729,16 @@ CREATE TABLE IF NOT EXISTS `plant_description` (
   `id` bigint(20) PRIMARY KEY,
   `plant_description` mediumtext NOT NULL
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8;
+
+-- PoA Onboarding
+
+CREATE TABLE IF NOT EXISTS `subcontractor` (
+  `id` bigint(20) PRIMARY KEY AUTO_INCREMENT,
+  `public_key` text NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `valid_after` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `valid_before` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY `name` (`name`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8;
