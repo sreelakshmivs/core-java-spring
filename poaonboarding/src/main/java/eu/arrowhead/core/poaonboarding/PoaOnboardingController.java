@@ -87,6 +87,7 @@ public class PoaOnboardingController {
 	@GetMapping(path = POA_URI)
 	public String onboardingPoa(final HttpServletRequest request) {
 		final X509Certificate requesterCert = getCertificate(request);
+		// TODO: Check that the subcontractor is valid!
 		try {
 			return poaGenerator.generatePoa(requesterCert);
 		} catch (final JoseException ex) {

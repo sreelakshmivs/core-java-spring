@@ -73,7 +73,7 @@ public class PoaValidator {
 		}
 
 		if (hasExpired) {
-			throw new AuthException("The subcontractor's rights have expired");
+			throw new AuthException("The subcontractor's onboarding rights have expired");
 		}
 
 		final String agentPublicKeyString = claims.get("agentPublicKey", String.class);

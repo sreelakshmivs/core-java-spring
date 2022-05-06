@@ -11,12 +11,12 @@
 
  package eu.arrowhead.core.poaonboarding.service;
 
+import java.net.URI;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.util.UriComponents;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -30,6 +30,7 @@ import eu.arrowhead.common.dto.internal.PoaOnboardRequestDTO;
 import eu.arrowhead.common.dto.internal.PoaOnboardingResponseDTO;
 import eu.arrowhead.common.dto.shared.CertificateType;
 import eu.arrowhead.common.dto.shared.ServiceEndpoint;
+import eu.arrowhead.common.dto.shared.ServiceRegistryResponseDTO;
 import eu.arrowhead.common.exception.ArrowheadException;
 import io.jsonwebtoken.Claims;
 
@@ -99,10 +100,17 @@ public class PoaOnboardingService {
 		return caDriver.signCertificate(csrDTO);
 	}
 
-	//-------------------------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------------------------
 	private ServiceEndpoint findServiceEndpoint(final CoreSystemService coreSystemService) {
-		final UriComponents service = driverUtilities.findUriByServiceRegistry(coreSystemService);
-		return new ServiceEndpoint(coreSystemService, service.toUri());
+		URI uri = null;
+		try {
+			final ServiceRegistryResponseDTO entry =
+					driverUtilities.findByServiceRegistry(coreSystemService, false);
+			uri = driverUtilities.createUri(entry).toUri();
+		} catch (final Exception ex) {
+			logger.debug("Could not find service", ex);
+		}
+		return new ServiceEndpoint(coreSystemService, uri);
 	}
 
 }
