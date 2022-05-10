@@ -28,11 +28,16 @@ import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.jose4j.jws.JsonWebSignature;
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.lang.JoseException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import eu.arrowhead.common.CommonConstants;
 import eu.arrowhead.common.CoreCommonConstants;
+import eu.arrowhead.common.database.entity.Subcontractor;
+import eu.arrowhead.common.exception.ArrowheadException;
+import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.exception.InvalidParameterException;
+import eu.arrowhead.core.poaonboarding.database.service.SubcontractorDBService;
 
 @Service
 public class PoaGenerator {
@@ -65,43 +70,74 @@ public class PoaGenerator {
 	@Resource(name = CommonConstants.ARROWHEAD_CONTEXT)
 	private Map<String,Object> arrowheadContext;
 
+	@Autowired
+	SubcontractorDBService subcontractorDBService;
+
 	//=================================================================================================
 	// methods
 
 	//-------------------------------------------------------------------------------------------------
-	public String generatePoa(final X509Certificate agentCert) throws JoseException {
+	public String generatePoa(final X509Certificate agentCert) {
 		final JsonWebSignature jws = new JsonWebSignature();
-		final PublicKey principalPublicKey = (PublicKey) arrowheadContext.get(CommonConstants.SERVER_PUBLIC_KEY);
 		final PrivateKey privateKey = (PrivateKey) arrowheadContext.get(CommonConstants.SERVER_PRIVATE_KEY);
 
-		final String agentName = getCommonName(agentCert);
+		final String agentCommonName = getCommonName(agentCert);
+		final String agentName = agentCommonName.split("\\.", 2)[0];
 		final PublicKey agentPublicKey = agentCert.getPublicKey();
-		final JwtClaims claims = generateClaims(principalPublicKey, agentPublicKey, agentName);
+		final String agentPublicKeyEncoded = Base64.getEncoder().encodeToString(agentPublicKey.getEncoded());
+
+		final PublicKey principalPublicKey = (PublicKey) arrowheadContext.get(CommonConstants.SERVER_PUBLIC_KEY);
+		final String principalPublicKeyEncoded = Base64.getEncoder().encodeToString(principalPublicKey.getEncoded());
+
+		validateSubcontractor(agentName, agentPublicKeyEncoded);
+
+		final JwtClaims claims = generateClaims(principalPublicKeyEncoded, agentPublicKeyEncoded, agentName);
+
 		jws.setAlgorithmHeaderValue(POA_ALG);
 		jws.setContentTypeHeaderValue(POA_CONTENT_TYPE);
 		jws.setPayload(claims.toJson());
 		jws.setKey(privateKey);
 
-		return jws.getCompactSerialization();
+		try {
+			return jws.getCompactSerialization();
+		} catch (final JoseException e) {
+			final String errorMessage = "Failed to generate PoA";
+			logger.error(errorMessage, e);
+			throw new ArrowheadException(errorMessage);
+		}
 	}
 
 	//=================================================================================================
 	// assistant methods
 
 	//-------------------------------------------------------------------------------------------------
+	private void validateSubcontractor(final String subcontractorName, final String subcontractorPublicKey) {
+		final Subcontractor subcontractor = subcontractorDBService.getSubcontractorByName(subcontractorName);
+
+		if (subcontractor.hasExpired()) {
+			throw new AuthException("The subcontractor's onboarding rights have expired");
+		}
+		
+		final String publicKeyFromDatabase = subcontractor.getPublicKey();
+		final boolean hasCorrectPublicKey = publicKeyFromDatabase.equals(subcontractorPublicKey);
+
+		if (!hasCorrectPublicKey) {
+			throw new AuthException("Incorrect subcontractor publickey");
+		}
+	}
+
+	//-------------------------------------------------------------------------------------------------
 	private JwtClaims generateClaims(
-		final PublicKey principalPublicKey,
-		final PublicKey agentPublicKey,
+		final String principalPublicKey,
+		final String agentPublicKey,
 		final String agentName
 	) {
 		final JwtClaims claims = new JwtClaims();
-		final String principalPublicKeyString = Base64.getEncoder().encodeToString(principalPublicKey.getEncoded());
-		final String agentPublicKeyString = Base64.getEncoder().encodeToString(agentPublicKey.getEncoded());
 
 		claims.setIssuedAtToNow();
 		claims.setExpirationTimeMinutesInTheFuture(TTL_MINUTES);
-		claims.setStringClaim(PRINCIPAL_PUBLIC_KEY, principalPublicKeyString);
-		claims.setStringClaim(AGENT_PUBLIC_KEY, agentPublicKeyString);
+		claims.setStringClaim(PRINCIPAL_PUBLIC_KEY, principalPublicKey);
+		claims.setStringClaim(AGENT_PUBLIC_KEY, agentPublicKey);
 		claims.setClaim(DESTINATION_NETWORK_ID, networkName);
 		claims.setClaim(TRANSFERABLE, 0);
 		claims.setClaim(METADATA, generateMetadata(agentName));
@@ -116,7 +152,7 @@ public class PoaGenerator {
 				CREDENTIALS, IOT_DEVICE_SUBMISSION);
 	}
 
-	// -------------------------------------------------------------------------------------------------
+	//-------------------------------------------------------------------------------------------------
 	private static String getCommonName(final X509Certificate certificate) {
 		try {
 			final X500Name subject = new JcaX509CertificateHolder(certificate).getSubject();
@@ -127,7 +163,7 @@ public class PoaGenerator {
 		}
 	}
 
-	// -------------------------------------------------------------------------------------------------
+	//-------------------------------------------------------------------------------------------------
 	private static String getCommonName(final X500Name name) {
 		final RDN[] rdns = name.getRDNs(BCStyle.CN);
 		if (rdns.length == 0) {

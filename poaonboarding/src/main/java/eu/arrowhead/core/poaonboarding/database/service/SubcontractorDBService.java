@@ -93,22 +93,23 @@ public class SubcontractorDBService {
 	//-------------------------------------------------------------------------------------------------
 	public Subcontractor getSubcontractorByName(final String name) {		
 		logger.debug("getSubcontractorByName started...");
-		
+
 		if (name.isEmpty()) {
 			throw new InvalidParameterException(EMPTY_NAME_ERROR_MESSAGE);
 		}
-		
+
 		try {
-			final Optional<Subcontractor> subcontractorOption = subcontractorRepository.findByName(name);
+			final Optional<Subcontractor> subcontractorOption =
+					subcontractorRepository.findByName(name);
 			if (subcontractorOption.isEmpty()) {
-				throw new InvalidParameterException("Subcontractor with name '" + name + "' not found.");		
+				throw new InvalidParameterException(
+						"Subcontractor with name '" + name + "' not found.");
 			}
-	
+
 			return subcontractorOption.get();
 		} catch (final InvalidParameterException ex) {
 			throw ex;
 		} catch (final Exception ex) {
-			logger.debug(ex.getMessage(), ex);
 			throw new ArrowheadException(CoreCommonConstants.DATABASE_OPERATION_EXCEPTION_MSG);
 		}
 	}

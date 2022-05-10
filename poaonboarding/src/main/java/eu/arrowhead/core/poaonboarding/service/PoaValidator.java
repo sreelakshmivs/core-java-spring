@@ -66,13 +66,12 @@ public class PoaValidator {
 		final Subcontractor subcontractor = subcontractorDBService.getSubcontractorByName(principalName);
 
 		final boolean correctPublicKey = subcontractor.getPublicKey().equals(principalPublicKey);
-		final boolean hasExpired = subcontractor.getValidBefore().isBefore(ZonedDateTime.now());
 
 		if (!correctPublicKey) {
 			throw new AuthException("Invalid subcontractor public key");
 		}
 
-		if (hasExpired) {
+		if (subcontractor.hasExpired()) {
 			throw new AuthException("The subcontractor's onboarding rights have expired");
 		}
 

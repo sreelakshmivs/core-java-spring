@@ -18,7 +18,6 @@ import javax.validation.Valid;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jose4j.lang.JoseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -31,8 +30,8 @@ import eu.arrowhead.common.CommonConstants;
 import eu.arrowhead.common.CoreCommonConstants;
 import eu.arrowhead.common.dto.internal.PoaOnboardRequestDTO;
 import eu.arrowhead.common.dto.internal.PoaOnboardingResponseDTO;
-import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.exception.AuthException;
+import eu.arrowhead.core.poaonboarding.database.service.SubcontractorDBService;
 import eu.arrowhead.core.poaonboarding.service.PoaGenerator;
 import eu.arrowhead.core.poaonboarding.service.PoaOnboardingService;
 import io.swagger.annotations.Api;
@@ -62,6 +61,9 @@ public class PoaOnboardingController {
 	@Autowired
 	private PoaOnboardingService onboardingService;
 
+	@Autowired
+	SubcontractorDBService subcontractorDBService;
+
 	//=================================================================================================
 	// methods
 
@@ -78,22 +80,16 @@ public class PoaOnboardingController {
 	}
 
 	//-------------------------------------------------------------------------------------------------
-	@ApiOperation(value = "Return a Power of Attorney for onboarding devices", response = String.class, tags = { CoreCommonConstants.SWAGGER_TAG_CLIENT })
+	@ApiOperation(value = "Return a Power of Attorney allowing a subcontractor to onboard devices", response = String.class, tags = { CoreCommonConstants.SWAGGER_TAG_CLIENT })
 	@ApiResponses(value = {
 			@ApiResponse(code = HttpStatus.SC_OK, message = GET_ONBOARDING_POA_HTTP_200_MESSAGE),
 			@ApiResponse(code = HttpStatus.SC_UNAUTHORIZED, message = CoreCommonConstants.SWAGGER_HTTP_401_MESSAGE),
 			@ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = CoreCommonConstants.SWAGGER_HTTP_500_MESSAGE)
 	})
 	@GetMapping(path = POA_URI)
-	public String onboardingPoa(final HttpServletRequest request) {
+	public String issueOnboardingPoa(final HttpServletRequest request) {
 		final X509Certificate requesterCert = getCertificate(request);
-		// TODO: Check that the subcontractor is valid!
-		try {
-			return poaGenerator.generatePoa(requesterCert);
-		} catch (final JoseException ex) {
-			logger.error("Failed to generate PoA", ex);
-			throw new ArrowheadException("Failed to generate PoA");
-		}
+		return poaGenerator.generatePoa(requesterCert);
 	}
 
 	//-------------------------------------------------------------------------------------------------

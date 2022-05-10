@@ -101,4 +101,10 @@ public class Subcontractor {
     public void onUpdate() {
         this.updatedAt = ZonedDateTime.now();
     }
+
+    //-------------------------------------------------------------------------------------------------
+    public boolean hasExpired() {
+        return getValidBefore().isBefore(ZonedDateTime.now());
+    }
+
 }
