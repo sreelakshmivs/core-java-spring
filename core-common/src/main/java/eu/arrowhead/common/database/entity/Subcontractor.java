@@ -64,7 +64,12 @@ public class Subcontractor {
 
     //-------------------------------------------------------------------------------------------------
 	public Subcontractor(final String name, final String publicKey, final ZonedDateTime validBefore) {
-        this();
+        final ZonedDateTime now = ZonedDateTime.now();
+        if (validBefore.isBefore(now)) {
+            this.validAfter = validBefore;
+        } else {
+            this.validAfter = now;
+        }
         this.publicKey = publicKey;
         this.name = name;
         this.validBefore = validBefore;
