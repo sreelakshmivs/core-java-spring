@@ -57,7 +57,7 @@ public class PoaValidator {
 	//=================================================================================================
 	// methods
 
-	public Claims parsePoa(final PublicKey requesterPublicKey, final String poa) {
+	public Claims parsePoa(final String poa) {
 		final PublicKey subcontractorPublicKey = getPrincipalPublicKey(poa);
 		final Claims claims = getValidatedClaims(poa, subcontractorPublicKey);
 		final String principalPublicKey = claims.get("principalPublicKey", String.class);
@@ -75,10 +75,6 @@ public class PoaValidator {
 			throw new AuthException("The subcontractor's onboarding rights have expired");
 		}
 
-		final String agentPublicKeyString = claims.get("agentPublicKey", String.class);
-		if (!toKey(agentPublicKeyString).equals(requesterPublicKey)) {
-			throw new ArrowheadException("Invalid PoA or public key");
-		}
 		return claims;
 	}
 

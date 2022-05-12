@@ -60,12 +60,11 @@ public class PoaOnboardingService {
 	public PoaOnboardingResponseDTO onboardWithName(
 		final PoaOnboardRequestDTO request,
 		final String host,
-		final String address,
-		final PublicKey requesterPublicKey
+		final String address
 	) {
 
 		// TODO: We don't actually need both the requester public key, since we have the keypair.
-		final Claims claims = poaValidator.parsePoa(requesterPublicKey, request.getPoa());
+		final Claims claims = poaValidator.parsePoa(request.getPoa());
 		final Map<String, String> metadata = claims.get("metadata", Map.class);
 		final String name = metadata.get("agentName");
 

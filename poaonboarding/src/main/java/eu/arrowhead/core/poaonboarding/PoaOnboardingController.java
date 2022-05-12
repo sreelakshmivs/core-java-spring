@@ -11,7 +11,6 @@
 
 package eu.arrowhead.core.poaonboarding;
 
-import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -89,6 +88,7 @@ public class PoaOnboardingController {
 	@GetMapping(path = POA_URI)
 	public String issueOnboardingPoa(final HttpServletRequest request) {
 		final X509Certificate requesterCert = getCertificate(request);
+		logger.debug("PoA request received");
 		return poaGenerator.generatePoa(requesterCert);
 	}
 
@@ -102,11 +102,10 @@ public class PoaOnboardingController {
 	@Validated
 	@PostMapping(path = CommonConstants.OP_POA_ONBOARDING_WITH_NAME, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public PoaOnboardingResponseDTO onboardWithName(final HttpServletRequest request, @Valid @RequestBody final PoaOnboardRequestDTO body) {
-		final X509Certificate certificate = getCertificate(request);
-		final PublicKey requesterPublicKey = certificate.getPublicKey();
+		logger.debug("'Onboard with name' request received");
 		final String host = request.getRemoteHost();
         final String address = request.getRemoteAddr();
-		return onboardingService.onboardWithName(body, host, address, requesterPublicKey);
+		return onboardingService.onboardWithName(body, host, address);
 	}
 
 	@ApiOperation(value = "Onboards the device", response = String.class, tags = { CoreCommonConstants.SWAGGER_TAG_CLIENT })
@@ -118,7 +117,11 @@ public class PoaOnboardingController {
 	@Validated
 	@PostMapping(path = CommonConstants.OP_POA_ONBOARDING_WITH_CSR, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public PoaOnboardingResponseDTO onboardWithCsr(final HttpServletRequest request, @Valid @RequestBody final PoaOnboardRequestDTO body) {
+		final X509Certificate requesterCert = getCertificate(request);
+		logger.debug("'Onboard with CSR' request received");
+
 		// TODO: Implement!
+		// Compare the public key in the certificate with the public key of the PoA's agent.
 		throw new UnsupportedOperationException("Not implemented");
 	}
 
